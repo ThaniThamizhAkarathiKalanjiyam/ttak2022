@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  
+  <meta name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1">
+
+  
+    
+    
+      <link href="/css/fonts.css" rel="stylesheet" type="text/css">
+    
+  
+
+  
+  <title>Proxying with Go - Part 1 - Keys and Certificates</title>
+
+  
+  
+  <link rel="stylesheet" href="/css/hugo-octopress.css">
+
+  
+  
+
+  
+    <link rel="stylesheet" href="/css/fork-awesome.min.css">
+  
+
+  
+  <link href="https://parsiya.net/favicon.png" rel="icon">
+
+  
+  
+
+  <meta name="description" content="" />
+  <meta name="keywords" content="[Parsia Hakimian Parsiya infosec information security]">
+  <meta name="author" content="Parsia">
+
+  
+  <meta name="generator" content="Hugo 0.83.1" />
+
+  
+  
+
+  
+  
+    
+
+  
+    <meta name="twitter:card" content="summary"/>
+  
+  
+  <meta name="twitter:title" content="Proxying with Go - Part 1 - Keys and Certificates"/>
+  <meta name="twitter:description" content="TL;DR: If you want to create self-signed certificates and spin up TLS client/servers dynamically to MitM, read on. If you want to create only a couple of certificates to spin up a web server, you are much better off following one of the many OpenSSL guides out there.
+
+Doing mostly weird projects at work, I proxy a lot of applications. I have talked a lot about thickclient proxying with Burp as you can see:
+
+
+https://parsiya.net/categories/thick-client-proxying/
+
+
+But most of these only apply if the application is using the HTTP(s) protocol. For raw TCP protocols, vanilla Burp is  useless."/>
+  
+  <meta name="twitter:domain" content="parsiya.net"/>
+  <meta name="twitter:creator" content="@CryptoGangsta"/>
+
+  
+
+  
+  
+
+
+
+</head>
+<body>
+
+
+<header role="banner">
+<hgroup>
+  
+  <h1><a href="https://parsiya.net/">அஃக</a></h1>
+    <h2>தமிழின் பெரிய சொற்தொகுப்பு</h2>
+</hgroup></header>
+
+
+<nav role="navigation">
+<fieldset class="mobile-nav">
+  
+  <select onchange="location = this.value;">
+    <option value="">Navigate…</option>
+      
+        <option value="https://parsiya.net/about/">» About Me!</option>
+      
+        <option value="https://parsiya.net/letters/">» எழுத்து</option>
+      
+  </select>
+</fieldset>
+
+
+<ul class="main-navigation">
+  
+  
+    
+      <li><a href="https://parsiya.net/about/" title="About Me!"  target="_blank"  rel="noopener noreferrer">About Me!</a></li>
+    
+  
+    
+      <li><a href="https://parsiya.net/letters/" title="எழுத்து"  target="_blank"  rel="noopener noreferrer">எழுத்து</a></li>
+    
+  
+</ul>
+
+<ul class="subscription">
+  
+    
+        <a href="https://parsiya.net/index.xml" target="_blank" type="application/rss+xml" title="RSS" rel="noopener noreferrer"><i class="fa fa-rss-square fa-lg"></i></a>
+    
+  
+</ul>
+
+
+  <form action="https://www.google.com/search" method="get" target="_blank" rel="noopener noreferrer">
+    <fieldset role="search">
+      <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+      <input type="hidden" name="q" value="site:https://parsiya.net/" />
+    </fieldset>
+  </form>
+
+</nav>
+
+
+<div id="main">
+  <div id="content">
+    <div>
+      <article class="hentry" role="article">
+
+        
+        
+
+<header>
+  <p class="meta">Apr 14, 2018
+     - 8 minute read 
+     - <a href="https://parsiya.net/drafts/2018-04-15-certificate-go/#disqus_thread">Comments</a>
+
+    
+    
+      - <a class="label" href="https://parsiya.net/categories/go/">Go </a><a class="label" href="https://parsiya.net/categories/crypto/">Crypto </a>
+    
+  </p>
+  <h1 class="entry-title">
+     Proxying with Go - Part 1 - Keys and Certificates 
+  </h1>
+</header>
+
+
+        <div class="entry-content">
+          
+          
+          
+          <p><strong>TL;DR:</strong> If you want to create self-signed certificates and spin up TLS client/servers dynamically to MitM, read on. If you want to create only a couple of certificates to spin up a web server, you are much better off following one of the many <code>OpenSSL</code> guides out there.</p>
+
+<p>Doing mostly weird projects at work, I proxy a lot of applications. I have talked a lot about thickclient proxying with Burp as you can see:</p>
+
+<ul>
+<li><a href="https://parsiya.net/categories/thick-client-proxying/" rel="nofollow" target="_blank">https://parsiya.net/categories/thick-client-proxying/</a></li>
+</ul>
+
+<p>But most of these only apply if the application is using the HTTP(s) protocol. For raw TCP protocols, vanilla Burp is  useless.</p>
+
+<h1 id="why-should-i-read-this">Why Should I Read This?</h1>
+
+<p>When I first started learning Go less than two years ago (June 2016 to be exact), I was doing so by writing a TLS-terminating Man-in-the-Middle (MitM) proxy (think Burp but for non-HTTP protocols). The proxy eventually got written in some hacky way and did the job for the project I was working on (and some subsequent ones) but I never published it.</p>
+
+<p>Part of such software is creating certificates on the fly for each new connection. There are quite a few tutorials out there about spinning up your own HTTPs server and some talk about creating your own certificate using <code>OpenSSL</code>. When searching for creating certificates in Go, you get page after page about &quot;Let's Encrypt&quot; and ACME protocol.</p>
+
+<p>The standard library gives you all the tools you need to accomplish this but it's not consistent on formats. Hopefully this helps the next (most likely) infosec person to deal with the pitfalls and not Go back to Python.</p>
+
+<h1 id="laundry-list">Laundry List</h1>
+
+<p>This article assumes you generally understand the following (general concepts, not the gory mathematical details):</p>
+
+<ul>
+<li>Asymmetric Cryptography:
+
+<ul>
+<li>How public/private key pairs work.</li>
+</ul></li>
+<li>x509 Certificates (specifically TLS certificates):
+
+<ul>
+<li>What is a certificate?</li>
+<li>What is it used for?</li>
+<li>What are some general fields in TLS certificates?</li>
+</ul></li>
+<li>DER and PEM encodings:
+
+<ul>
+<li>DER is ASN.1 encoded bytes.</li>
+<li>PEM is DER in base64 with a text header and footer.</li>
+</ul></li>
+</ul>
+
+<h1 id="keys">Keys</h1>
+
+<p>Let's start with keys and build everything up.</p>
+
+<h2 id="key-algorithms">Key Algorithms</h2>
+
+<p>When creating keys, you can choose one of <a href="https://golang.org/src/crypto/x509/x509.go#L221" rel="nofollow" target="_blank">the three algorithms</a>:</p>
+
+
+
+
+
+<figure class="code">
+  <figcaption>
+  	<span>Supported key algorithms</span>
+  </figcaption>
+  <div class="codewrapper">
+    <div class="highlight"><div style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
+<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">1
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">2
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">3
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">4
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">5
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#268bd2">var</span> publicKeyAlgoName = [<span style="color:#719e07">...</span>]<span style="color:#dc322f">string</span>{
+    RSA:   <span style="color:#2aa198">&#34;RSA&#34;</span>,
+    DSA:   <span style="color:#2aa198">&#34;DSA&#34;</span>,
+    ECDSA: <span style="color:#2aa198">&#34;ECDSA&#34;</span>,
+}</code></pre></td></tr></table>
+</div>
+</div>
+  </div>
+</figure>
+
+<p>We're going to ignore <code>DSA</code> and work with the other two.</p>
+
+<h2 id="key-generation">Key Generation</h2>
+
+<p>We have to use package specific functions based on the algorithm.</p>
+
+<h3 id="rsa-generatekey">rsa.GenerateKey</h3>
+
+<p>To <a href="https://golang.org/pkg/crypto/rsa/#GenerateKey" rel="nofollow" target="_blank">generate an RSA key</a>, we have to supply the number of bits in the key.</p>
+
+
+
+
+
+<figure class="code">
+  <figcaption>
+  	<span>rsa.GenerateKey()</span>
+  </figcaption>
+  <div class="codewrapper">
+    <div class="highlight"><div style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
+<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">1
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">2
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#586e75">// Be sure to use rand.Reader.
+</span><span style="color:#586e75"></span>rsaPrivKey, err <span style="color:#719e07">:=</span> rsa.<span style="color:#268bd2">GenerateKey</span>(rand.Reader, <span style="color:#2aa198">1024</span>)</code></pre></td></tr></table>
+</div>
+</div>
+  </div>
+</figure>
+
+<p>The result will be of type <a href="https://golang.org/pkg/crypto/rsa/#PrivateKey" rel="nofollow" target="_blank">rsa.PrivateKey</a>:</p>
+
+
+
+
+
+<figure class="code">
+  <figcaption>
+  	<span>rsa.PrivateKey</span>
+  </figcaption>
+  <div class="codewrapper">
+    <div class="highlight"><div style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
+<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">1
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">2
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">3
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">4
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">5
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">6
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">7
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">8
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">9
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#268bd2">type</span> PrivateKey <span style="color:#268bd2">struct</span> {
+    PublicKey            <span style="color:#586e75">// public part.
+</span><span style="color:#586e75"></span>    D         <span style="color:#719e07">*</span>big.Int   <span style="color:#586e75">// private exponent
+</span><span style="color:#586e75"></span>    Primes    []<span style="color:#719e07">*</span>big.Int <span style="color:#586e75">// prime factors of N, has &gt;= 2 elements.
+</span><span style="color:#586e75"></span>
+    <span style="color:#586e75">// Precomputed contains precomputed values that speed up private
+</span><span style="color:#586e75"></span>    <span style="color:#586e75">// operations, if available.
+</span><span style="color:#586e75"></span>    Precomputed PrecomputedValues
+}</code></pre></td></tr></table>
+</div>
+</div>
+  </div>
+</figure>
+
+<p>Note private key also has the <a href="https://golang.org/pkg/crypto/rsa/#PublicKey" rel="nofollow" target="_blank">rsa.PublicKey</a> embedded in it:</p>
+
+
+
+
+
+<figure class="code">
+  <figcaption>
+  	<span>rsa.PublicKey</span>
+  </figcaption>
+  <div class="codewrapper">
+    <div class="highlight"><div style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
+<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">1
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">2
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">3
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">4
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#268bd2">type</span> PublicKey <span style="color:#268bd2">struct</span> {
+    N <span style="color:#719e07">*</span>big.Int <span style="color:#586e75">// modulus
+</span><span style="color:#586e75"></span>    E <span style="color:#dc322f">int</span>      <span style="color:#586e75">// public exponent
+</span><span style="color:#586e75"></span>}</code></pre></td></tr></table>
+</div>
+</div>
+  </div>
+</figure>
+
+<h3 id="ecdsa-generatekey">ecdsa.GenerateKey</h3>
+
+<p>Creating ECDSA keys are just as simple, but we need to provide a curve of type <a href="https://golang.org/pkg/crypto/elliptic/#Curve" rel="nofollow" target="_blank">elliptic.Curve</a> which is the return value of one of <a href="https://golang.org/pkg/crypto/elliptic/#P224" rel="nofollow" target="_blank">these four functions</a>:</p>
+
+
+
+
+
+<figure class="code">
+  <figcaption>
+  	<span>elliptic.Curves</span>
+  </figcaption>
+  <div class="codewrapper">
+    <div class="highlight"><div style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
+<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">1
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">2
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">3
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">4
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-ps" data-lang="ps"><span style="color:#268bd2">elliptic.P224</span><span style="color:#2aa198">()</span>
+<span style="color:#268bd2">elliptic.P256</span><span style="color:#2aa198">()</span>
+<span style="color:#268bd2">elliptic.P384</span><span style="color:#2aa198">()</span>
+<span style="color:#268bd2">elliptic.P521</span><span style="color:#2aa198">()</span></code></pre></td></tr></table>
+</div>
+</div>
+  </div>
+</figure>
+
+<p>Generating the key is done using the <a href="https://golang.org/pkg/crypto/ecdsa/#GenerateKey" rel="nofollow" target="_blank">ecdsa.GenerateKey()</a> function:</p>
+
+
+
+
+
+<figure class="code">
+  <figcaption>
+  	<span>ecdsa.GenerateKey()</span>
+  </figcaption>
+  <div class="codewrapper">
+    <div class="highlight"><div style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
+<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">1
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">2
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-ps" data-lang="ps"><span style="color:#268bd2">ecdsaPrivKey,</span> <span style="color:#268bd2">err</span> <span style="color:#268bd2">:=</span> <span style="color:#268bd2">ecdsa.GenerateKey</span><span style="color:#2aa198">(P224(), rand.Reader)</span>
+<span style="color:#268bd2">ecdsaPrivKey,</span> <span style="color:#268bd2">err</span> <span style="color:#268bd2">:=</span> <span style="color:#268bd2">ecdsa.GenerateKey</span><span style="color:#2aa198">(P384(), rand.Reader)</span></code></pre></td></tr></table>
+</div>
+</div>
+  </div>
+</figure>
+
+<p>For some reason <code>rand io.Reader</code> is the second parameter for ECDSA <code>GenerateKey()</code> and first for the RSA.</p>
+
+<p>If you want more granular output, there's also an <a href="https://golang.org/pkg/crypto/elliptic/#GenerateKey" rel="nofollow" target="_blank">elliptic.GenerateKey()</a> function.</p>
+
+
+
+
+
+<figure class="code">
+  <figcaption>
+  	<span>elliptic.GenerateKey()</span>
+  </figcaption>
+  <div class="codewrapper">
+    <div class="highlight"><div style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
+<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">1
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">2
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#268bd2">func</span> elliptic.<span style="color:#268bd2">GenerateKey</span>(curve Curve, rand io.Reader)
+    (priv []<span style="color:#dc322f">byte</span>, x, y <span style="color:#719e07">*</span>big.Int, err <span style="color:#dc322f">error</span>)</code></pre></td></tr></table>
+</div>
+</div>
+  </div>
+</figure>
+
+<p>ECDSA <a href="https://golang.org/pkg/crypto/ecdsa/#PrivateKey" rel="nofollow" target="_blank">private</a> and <a href="https://golang.org/pkg/crypto/ecdsa/#PublicKey" rel="nofollow" target="_blank">public</a> keys are similar to RSA:</p>
+
+
+
+
+
+<figure class="code">
+  <figcaption>
+  	<span>ecdsa.PrivateKey</span>
+  </figcaption>
+  <div class="codewrapper">
+    <div class="highlight"><div style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
+<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">1
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">2
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">3
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">4
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#268bd2">type</span> PrivateKey <span style="color:#268bd2">struct</span> {
+    PublicKey
+    D <span style="color:#719e07">*</span>big.Int
+}</code></pre></td></tr></table>
+</div>
+</div>
+  </div>
+</figure>
+
+<p>Note that public key is again embedded into private key:</p>
+
+
+
+
+
+<figure class="code">
+  <figcaption>
+  	<span>ecdsa.PublicKey</span>
+  </figcaption>
+  <div class="codewrapper">
+    <div class="highlight"><div style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
+<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">1
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">2
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">3
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">4
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#268bd2">type</span> PublicKey <span style="color:#268bd2">struct</span> {
+    elliptic.Curve
+    X, Y <span style="color:#719e07">*</span>big.Int
+}</code></pre></td></tr></table>
+</div>
+</div>
+  </div>
+</figure>
+
+<h3 id="keypair-struct">Keypair Struct</h3>
+
+<p>Now we know how to generate keys, before we continue we need to take a step back and do a bit of planning. Assume we want to make a general <code>GenerateKeys()</code> function that creates a pair of keys based on a provided algorithm and specifications (e.g. 2048-bit RSA), such a function needs to return an <code>interface{}</code> because the output could be either an RSA or ECDSA key.</p>
+
+<p>When I wrote my TLS dump code 1.5 years ago, I had to go into so much trouble <a href="https://github.com/parsiya/tlsdump/blob/master/certhelper.go#L300" rel="nofollow" target="_blank">with unmarshalling</a>. Oh you have this blob of bytes that you want to convert to PEM but what kind of object is it? Then after parsing, you also need to spit out another <code>interface{}</code> too.</p>
+
+<p>This time I created a Keypair struct that holds pointers to everything and the key types.</p>
+
+
+
+
+
+<figure class="code">
+  <figcaption>
+  	<span>Keypair struct</span>
+  </figcaption>
+  <div class="codewrapper">
+    <div class="highlight"><div style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
+<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">1
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">2
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">3
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">4
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">5
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">6
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">7
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">8
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#586e75">// Keypair contains a pair of public/private keys.
+</span><span style="color:#586e75"></span><span style="color:#268bd2">type</span> Keypair <span style="color:#268bd2">struct</span> {
+    Algorithm     KeyAlgo
+    Curve         elliptic.Curve
+    RSAKeySize    RSAKeySize
+    privateKeyRSA <span style="color:#719e07">*</span>rsa.PrivateKey
+    privateKeyEC  <span style="color:#719e07">*</span>ecdsa.PrivateKey
+}</code></pre></td></tr></table>
+</div>
+</div>
+  </div>
+</figure>
+
+<p><code>KeyAlgo</code> and <code>RSAKeySize</code> are just helper constants.</p>
+
+
+
+
+
+<figure class="code">
+  <figcaption>
+  	<span>KeyAlgo and RSAKeySize</span>
+  </figcaption>
+  <div class="codewrapper">
+    <div class="highlight"><div style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
+<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 1
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 2
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 3
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 4
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 5
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 6
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 7
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 8
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 9
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">10
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">11
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">12
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">13
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">14
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">15
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">16
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">17
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">18
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#586e75">// KeyAlgo represents the supported key types.
+</span><span style="color:#586e75"></span><span style="color:#268bd2">type</span> KeyAlgo <span style="color:#dc322f">string</span>
+
+<span style="color:#268bd2">const</span> (
+    KeyAlgoRSA = <span style="color:#2aa198">&#34;RSA&#34;</span>
+    KeyAlgoEC  = <span style="color:#2aa198">&#34;ECDSA&#34;</span>
+)
+
+<span style="color:#586e75">// RSAKeySize represents four supported RSA keysizes.
+</span><span style="color:#586e75"></span><span style="color:#268bd2">type</span> RSAKeySize <span style="color:#dc322f">int</span>
+
+<span style="color:#586e75">// Constants representing RSA keysizes.
+</span><span style="color:#586e75"></span><span style="color:#268bd2">const</span> (
+    RSAKey1024 = <span style="color:#2aa198">1024</span>
+    RSAKey2048 = <span style="color:#2aa198">2048</span>
+    RSAKey3072 = <span style="color:#2aa198">3072</span>
+    RSAKey4096 = <span style="color:#2aa198">4096</span>
+)</code></pre></td></tr></table>
+</div>
+</div>
+  </div>
+</figure>
+
+<h3 id="generic-generatekeys">Generic GenerateKeys()</h3>
+
+<p>Now we can create a key generator that returns a <code>Keypair</code> and we do not have to worry about the type and unmarshalling anymore.</p>
+
+
+
+
+
+<figure class="code">
+  <figcaption>
+  	<span>GenerateKeypair</span>
+  </figcaption>
+  <div class="codewrapper">
+    <div class="highlight"><div style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
+<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 1
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 2
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 3
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 4
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 5
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 6
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 7
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 8
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 9
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">10
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">11
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">12
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">13
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">14
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">15
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">16
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">17
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">18
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">19
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">20
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">21
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">22
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">23
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">24
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">25
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">26
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">27
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#586e75">// GenerateKeypair creates a new Keypair with specified algorithm, curve or
+</span><span style="color:#586e75">// keysize. If algo is KeyAlgoRSA, curve is ignored and keySize is used.
+</span><span style="color:#586e75">// If algo is KeyAlgoEC, curve is used and keysize is ignored.
+</span><span style="color:#586e75">// Valid curves are elliptic.P224()/P256()/P384() and P521().
+</span><span style="color:#586e75"></span><span style="color:#268bd2">func</span> <span style="color:#268bd2">GenerateKeypair</span>(algo KeyAlgo, curve elliptic.Curve, keySize RSAKeySize) (key Keypair, err <span style="color:#dc322f">error</span>) {
+    <span style="color:#719e07">switch</span> algo {
+    <span style="color:#719e07">case</span> KeyAlgoRSA:
+        privKey, err <span style="color:#719e07">:=</span> rsa.<span style="color:#268bd2">GenerateKey</span>(rand.Reader, <span style="color:#b58900">int</span>(keySize))
+        <span style="color:#719e07">if</span> err <span style="color:#719e07">!=</span> <span style="color:#cb4b16">nil</span> {
+            <span style="color:#719e07">return</span> key, err
+        }
+        key.Algorithm = algo
+        key.RSAKeySize = keySize
+        key.privateKeyRSA = privKey
+    <span style="color:#719e07">case</span> KeyAlgoEC:
+        privKey, err <span style="color:#719e07">:=</span> ecdsa.<span style="color:#268bd2">GenerateKey</span>(curve, rand.Reader)
+        <span style="color:#719e07">if</span> err <span style="color:#719e07">!=</span> <span style="color:#cb4b16">nil</span> {
+            <span style="color:#719e07">return</span> key, err
+        }
+        key.Algorithm = algo
+        key.privateKeyEC = privKey
+        key.Curve = curve
+    <span style="color:#719e07">default</span>:
+        <span style="color:#719e07">return</span> key, fmt.<span style="color:#268bd2">Errorf</span>(<span style="color:#2aa198">&#34;error generating keypair: algorithm is not set or isn&#39;t valid, got %s&#34;</span>, algo)
+    }
+    <span style="color:#719e07">return</span> key, <span style="color:#cb4b16">nil</span>
+}</code></pre></td></tr></table>
+</div>
+</div>
+  </div>
+</figure>
+
+<h3 id="keypair-helper-methods">Keypair Helper Methods</h3>
+
+<p>We can also make helper methods to return the private key and public keys automatically by reading <code>keypair.Algorithm</code> internally. Public and private keys are returned in an <code>interface{}</code>. Things like this:</p>
+
+
+
+
+
+<figure class="code">
+  <figcaption>
+  	<span>keypair.GetPrivateKey()</span>
+  </figcaption>
+  <div class="codewrapper">
+    <div class="highlight"><div style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
+<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 1
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 2
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 3
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 4
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 5
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 6
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 7
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 8
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 9
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">10
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">11
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">12
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">13
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">14
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">15
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">16
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">17
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#586e75">// GetPrivateKey returns a pointer to the private key object as an interface{}.
+</span><span style="color:#586e75"></span><span style="color:#268bd2">func</span> (k Keypair) <span style="color:#268bd2">GetPrivateKey</span>() (<span style="color:#268bd2">interface</span>{}, <span style="color:#dc322f">error</span>) {
+    <span style="color:#719e07">switch</span> k.Algorithm {
+    <span style="color:#719e07">case</span> KeyAlgoRSA:
+        <span style="color:#719e07">if</span> k.privateKeyRSA <span style="color:#719e07">==</span> <span style="color:#cb4b16">nil</span> {
+            <span style="color:#719e07">return</span> <span style="color:#cb4b16">nil</span>, fmt.<span style="color:#268bd2">Errorf</span>(<span style="color:#2aa198">&#34;keypair&#39;s algorithm is set to %s but the corresponding public key is not set&#34;</span>, KeyAlgoRSA)
+        }
+        <span style="color:#719e07">return</span> k.privateKeyRSA, <span style="color:#cb4b16">nil</span>
+    <span style="color:#719e07">case</span> KeyAlgoEC:
+        <span style="color:#719e07">if</span> k.privateKeyEC <span style="color:#719e07">==</span> <span style="color:#cb4b16">nil</span> {
+            <span style="color:#719e07">return</span> <span style="color:#cb4b16">nil</span>, fmt.<span style="color:#268bd2">Errorf</span>(<span style="color:#2aa198">&#34;keypair&#39;s algorithm is set to %s but the corresponding public key is not set&#34;</span>, KeyAlgoEC)
+        }
+        <span style="color:#719e07">return</span> k.privateKeyEC, <span style="color:#cb4b16">nil</span>
+    <span style="color:#719e07">default</span>:
+        <span style="color:#719e07">return</span> <span style="color:#cb4b16">nil</span>, fmt.<span style="color:#268bd2">Errorf</span>(<span style="color:#2aa198">&#34;error getting private key: keypair&#39;s algorithm is not set or isn&#39;t valid, got %s&#34;</span>, k.Algorithm)
+    }
+}</code></pre></td></tr></table>
+</div>
+</div>
+  </div>
+</figure>
+
+<h3 id="converting-keys-to-der">Converting Keys to DER</h3>
+
+<p>If you decide not to create any and handle the keys manually, it's fine but be sure to create a method for returning the private key in DER format. The <code>x509</code> library has different marshalling methods for RSA and ECDSA keys. Now we can use our <code>GetPrivateKey()</code> method like this:</p>
+
+
+
+
+
+<figure class="code">
+  <figcaption>
+  	<span>GetPrivateKeyDER</span>
+  </figcaption>
+  <div class="codewrapper">
+    <div class="highlight"><div style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
+<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 1
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 2
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 3
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 4
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 5
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 6
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 7
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 8
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 9
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">10
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">11
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">12
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">13
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">14
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">15
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">16
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">17
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">18
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">19
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">20
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">21
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#586e75">// GetPrivateKeyDER returns the private key in DER format as a []byte.
+</span><span style="color:#586e75"></span><span style="color:#268bd2">func</span> (k Keypair) <span style="color:#268bd2">GetPrivateKeyDER</span>() (privKeyDER []<span style="color:#dc322f">byte</span>, err <span style="color:#dc322f">error</span>) {
+    <span style="color:#586e75">// Check if corresponding private key is set.
+</span><span style="color:#586e75"></span>    _, err = k.<span style="color:#268bd2">GetPrivateKey</span>()
+    <span style="color:#719e07">if</span> err <span style="color:#719e07">!=</span> <span style="color:#cb4b16">nil</span> {
+        <span style="color:#719e07">return</span> <span style="color:#cb4b16">nil</span>, err
+    }
+
+    <span style="color:#719e07">switch</span> k.Algorithm {
+    <span style="color:#719e07">case</span> KeyAlgoRSA:
+        privKeyDER <span style="color:#719e07">:=</span> x509.<span style="color:#268bd2">MarshalPKCS1PrivateKey</span>(k.privateKeyRSA)
+        <span style="color:#719e07">if</span> privKeyDER <span style="color:#719e07">==</span> <span style="color:#cb4b16">nil</span> {
+            <span style="color:#719e07">return</span> <span style="color:#cb4b16">nil</span>, fmt.<span style="color:#268bd2">Errorf</span>(<span style="color:#2aa198">&#34;error getting private key: invalid RSA private key&#34;</span>)
+        }
+        <span style="color:#719e07">return</span> privKeyDER, <span style="color:#cb4b16">nil</span>
+    <span style="color:#719e07">case</span> KeyAlgoEC:
+        <span style="color:#719e07">return</span> x509.<span style="color:#268bd2">MarshalECPrivateKey</span>(k.privateKeyEC)
+    <span style="color:#719e07">default</span>:
+        <span style="color:#719e07">return</span> <span style="color:#cb4b16">nil</span>, fmt.<span style="color:#268bd2">Errorf</span>(<span style="color:#2aa198">&#34;error getting private key: keypair&#39;s algorithm is not set or isn&#39;t valid, got %s&#34;</span>, k.Algorithm)
+    }
+}</code></pre></td></tr></table>
+</div>
+</div>
+  </div>
+</figure>
+
+<p>Here's another library inconsistency between RSA and ECDSA methods.</p>
+
+<p><a href="https://golang.org/pkg/crypto/x509/#MarshalPKCS1PrivateKey" rel="nofollow" target="_blank">x509.MarshalPKCS1PrivateKey</a> does not return an error while <a href="https://golang.org/pkg/crypto/x509/#MarshalECPrivateKey" rel="nofollow" target="_blank">x509.MarshalECPrivateKey</a> does. Looking inside <a href="https://golang.org/src/crypto/x509/pkcs1.go?s=2239:2294#L82" rel="nofollow" target="_blank">the source</a> we can see the <code>asn1.Marshal</code> error is being ignored.</p>
+
+
+
+
+
+<figure class="code">
+  <figcaption>
+  	<span>x509.MarshalPKCS1PrivateKey</span>
+  </figcaption>
+  <div class="codewrapper">
+    <div class="highlight"><div style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
+<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">1
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">2
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">3
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">4
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">5
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">6
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">7
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#586e75">// MarshalPKCS1PrivateKey converts a private key to ASN.1 DER encoded form.
+</span><span style="color:#586e75"></span><span style="color:#268bd2">func</span> <span style="color:#268bd2">MarshalPKCS1PrivateKey</span>(key <span style="color:#719e07">*</span>rsa.PrivateKey) []<span style="color:#dc322f">byte</span> {
+    <span style="color:#586e75">// Removed
+</span><span style="color:#586e75"></span>
+    b, _ <span style="color:#719e07">:=</span> asn1.<span style="color:#268bd2">Marshal</span>(priv)
+    <span style="color:#719e07">return</span> b
+}</code></pre></td></tr></table>
+</div>
+</div>
+  </div>
+</figure>
+
+<p>Both of these methods convert a private key object into DER bytes.</p>
+
+<h3 id="converting-der-to-pem">Converting DER to PEM</h3>
+
+<p>PEM encoding is just DER bytes with a text header and footer. Converting the private key to PEM is straightforward.</p>
+
+
+
+
+
+<figure class="code">
+  <figcaption>
+  	<span>GetPrivateKeyPEM</span>
+  </figcaption>
+  <div class="codewrapper">
+    <div class="highlight"><div style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
+<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 1
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 2
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 3
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 4
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 5
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 6
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 7
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 8
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050"> 9
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">10
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">11
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">12
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">13
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">14
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">15
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">16
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">17
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">18
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">19
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">20
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">21
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050">22
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre style="color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#586e75">// GetPrivateKeyPEM returns keypair&#39;s private key in PEM encoding.
+</span><span style="color:#586e75"></span><span style="color:#268bd2">func</span> (k Keypair) <span style="color:#268bd2">GetPrivateKeyPEM</span>() (keyPEM []<span style="color:#dc322f">byte</span>, err <span style="color:#dc322f">error</span>) {
+    <span style="color:#268bd2">var</span> pemBlock <span style="color:#719e07">*</span>pem.Block
+    <span style="color:#719e07">switch</span> k.Algorithm {
+    <span style="color:#719e07">case</span> KeyAlgoRSA:
+        pemBlock.Type = <span style="color:#2aa198">&#34;RSA PRIVATE KEY&#34;</span>
+    <span style="color:#719e07">case</span> KeyAlgoEC:
+        pemBlock.Type = <span style="color:#2aa198">&#34;EC PRIVATE KEY&#34;</span>
+    <span style="color:#719e07">default</span>:
+        <span style="color:#719e07">return</span> <span style="color:#cb4b16">nil</span>, fmt.<span style="color:#268bd2">Errorf</span>(<span style="color:#2aa198">&#34;error getting private key: keypair&#39;s algorithm is not set or isn&#39;t valid, got %s&#34;</span>, k.Algorithm)
+    }
+
+    pemBlock.Bytes, err = k.<span style="color:#268bd2">GetPrivateKeyDER</span>()
+    <span style="color:#719e07">if</span> err <span style="color:#719e07">!=</span> <span style="color:#cb4b16">nil</span> {
+        <span style="color:#719e07">return</span> <span style="color:#cb4b16">nil</span>, err
+    }
+
+    <span style="color:#719e07">if</span> err <span style="color:#719e07">:=</span> pem.<span style="color:#268bd2">Encode</span>(bytes.<span style="color:#268bd2">NewBuffer</span>(keyPEM), pemBlock); err <span style="color:#719e07">!=</span> <span style="color:#cb4b16">nil</span> {
+        <span style="color:#719e07">return</span> <span style="color:#cb4b16">nil</span>, err
+    }
+    <span style="color:#719e07">return</span> keyPEM, <span style="color:#cb4b16">nil</span>
+}</code></pre></td></tr></table>
+</div>
+</div>
+  </div>
+</figure>
+
+<p>The <a href="https://golang.org/pkg/encoding/pem/" rel="nofollow" target="_blank">pem</a> offers two encode functions.</p>
+
+<ul>
+<li><a href="[pem-encodetomemory]:" rel="nofollow" target="_blank">func Encode(out io.Writer, b *Block) error</a></li>
+<li>[func EncodeToMemory(b *Block) []byte][pem-encodetomemory]</li>
+</ul>
+
+<p>I would advise using <code>Encode</code> because it returns an error. It's a bit harder to use because we need to pass an <code>io.Writer</code>. With <code>EncodeToMemory</code> the the result is <code>nil</code> in case of errors.</p>
+
+<!-- Links -->
+        </div>
+        
+
+<footer>
+  <p class="meta">
+    <span class="byline author vcard">Posted by <span class="fn">Parsia</span></span>
+    
+    <time>Apr 14, 2018</time>
+    
+      <span class="categories">
+        Tags:
+        
+          <a class="category" href="https://parsiya.net/tags/"></a>  
+    
+    </span>
+  </p>
+
+  
+
+  <p class="meta">
+    
+
+    
+  </p>
+  
+    
+      <div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "parsiya" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+    
+  
+</footer>
+
+      </article>
+    </div>
+    
+
+<aside class="sidebar thirds">
+  <section class="first odd">
+
+    
+      <h1>Who am I?</h1>
+    
+
+    <p>
+      
+        <p>I am Pitchaimuthu Muthaiya, a senior security engineer.</p>
+
+<p>I write about application tamil words and roots of words.</p>
+
+<p>Click on <a href="/about/">About Me!</a> to know more.</p>
+
+      
+    </p>
+  </section>
+
+
+
+  
+  <ul class="sidebar-nav">
+    <li class="sidebar-nav-item">
+      <a target="_blank" rel="noopener noreferrer" href="https://github.com/parsiya/" title="https://github.com/parsiya/"><i class="fa fa-github fa-3x"></i></a>
+      
+      
+      <a target="_blank" rel="noopener noreferrer" href="https://twitter.com/cryptogangsta/" title="https://twitter.com/cryptogangsta/"><i class="fa fa-twitter fa-3x"></i></a>
+      
+        <a target="_blank" rel="noopener noreferrer" href="https://keybase.io/parsiya/" title="https://keybase.io/parsiya/"><i class="fa fa-keybase fa-3x"></i></a> 
+      
+      <a target="_blank" rel="noopener noreferrer" href="https://www.linkedin.com/in/parsiya" title="https://www.linkedin.com/in/parsiya"><i class="fa fa-linkedin fa-3x"></i></a>
+      
+      
+      
+      
+      
+
+    
+    
+    </li>
+  </ul>
+
+  
+
+  
+    
+      <section class="odd">
+        
+          <h1>Collections</h1>
+        
+        
+          <li>
+            <a href="https://parsiya.net/categories/thick-client-proxying/" title="Thick Client Proxying" >Thick Client Proxying</a>
+          </li>
+        
+          <li>
+            <a href="https://parsiya.net/categories/writeup/" title="CTFs/Writeups" >CTFs/Writeups</a>
+          </li>
+        
+          <li>
+            <a href="https://parsiya.net/categories/attack-surface-analysis/" title="Attack Surface Analysis" >Attack Surface Analysis</a>
+          </li>
+        
+          <li>
+            <a href="https://parsiya.net/categories/bug-bounty/" title="Bug Bounty" >Bug Bounty</a>
+          </li>
+        
+          <li>
+            <a href="https://parsiya.net/categories/go/" title="Go/Golang" >Go/Golang</a>
+          </li>
+        
+          <li>
+            <a href="https://parsiya.net/categories/blockchain/" title="Blockchain" >Blockchain</a>
+          </li>
+        
+          <li>
+            <a href="https://parsiya.net/categories/burp-extension/" title="Burp Extension Development" >Burp Extension Development</a>
+          </li>
+        
+          <li>
+            <a href="https://parsiya.net/categories/automation/" title="Automation" >Automation</a>
+          </li>
+        
+          <li>
+            <a href="https://parsiya.net/categories/reverse-engineering/" title="Reverse Engineering" >Reverse Engineering</a>
+          </li>
+        
+          <li>
+            <a href="https://parsiya.net/categories/crypto/" title="Crypto(graphy)" >Crypto(graphy)</a>
+          </li>
+        
+          <li>
+            <a href="https://parsiya.net/categories/winappdbg/" title="WinAppDbg" >WinAppDbg</a>
+          </li>
+        
+          <li>
+            <a href="https://awsome.pw" title="AWSome.pw - S3 bucket squatting - my very legit branded vulnerability" >AWSome.pw - S3 bucket squatting - my very legit branded vulnerability</a>
+          </li>
+        
+      </section>
+    
+  
+
+  
+  
+  
+</aside>
+
+  </div>
+</div>
+
+    <footer role="contentinfo">
+      <p>Copyright &copy; 2021 Parsia - <a href="https://parsiya.net/license/">License</a> -
+        <span class="credit">Powered by <a target="_blank" href="https://gohugo.io" rel="noopener noreferrer">Hugo</a> and <a target="_blank" href="https://github.com/parsiya/hugo-octopress/" rel="noopener noreferrer">Hugo-Octopress</a> theme.
+      </p>
+    </footer>
+
+    
+    
+
+
+
+    
+    
+    
+
+    
+  </body>
+</html>
+
