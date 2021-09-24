@@ -61,39 +61,39 @@ menu:
     - Name: Thick Client Proxying
       URL: /categories/thick-client-proxying/
       weight: 5
-    - Name: CTFs/Writeups
-      URL: /categories/writeup/
-      weight: 6
-    - Name: Attack Surface Analysis
-      URL: /categories/attack-surface-analysis/
-      weight: 7
-    - Name: Bug Bounty
-      URL: /categories/bug-bounty/
-      weight: 9
-    - Name: Go/Golang
-      URL: /categories/go/
-      weight: 10
-    - Name: Blockchain
-      URL: /categories/blockchain/
-      weight: 15
-    - Name: Burp Extension Development
-      URL: /categories/burp-extension/
-      weight: 17
-    - Name: Automation
-      URL: /categories/automation/
-      weight: 20
-    - Name: Reverse Engineering
-      URL: /categories/reverse-engineering/
-      weight: 25
-    - Name: Crypto(graphy)
-      URL: /categories/crypto/
-      weight: 30
-    - Name: WinAppDbg
-      URL: /categories/winappdbg/
-      weight: 36
-    - Name: AWSome.pw - S3 bucket squatting - my very legit branded vulnerability
-      URL: "https://awsome.pw"
-      weight: 40
+    # - Name: CTFs/Writeups
+      # URL: /categories/writeup/
+      # weight: 6
+    # - Name: Attack Surface Analysis
+      # URL: /categories/attack-surface-analysis/
+      # weight: 7
+    # - Name: Bug Bounty
+      # URL: /categories/bug-bounty/
+      # weight: 9
+    # - Name: Go/Golang
+      # URL: /categories/go/
+      # weight: 10
+    # - Name: Blockchain
+      # URL: /categories/blockchain/
+      # weight: 15
+    # - Name: Burp Extension Development
+      # URL: /categories/burp-extension/
+      # weight: 17
+    # - Name: Automation
+      # URL: /categories/automation/
+      # weight: 20
+    # - Name: Reverse Engineering
+      # URL: /categories/reverse-engineering/
+      # weight: 25
+    # - Name: Crypto(graphy)
+      # URL: /categories/crypto/
+      # weight: 30
+    # - Name: WinAppDbg
+      # URL: /categories/winappdbg/
+      # weight: 36
+    # - Name: AWSome.pw - S3 bucket squatting - my very legit branded vulnerability
+      # URL: "https://awsome.pw"
+      # weight: 40
 
 # Parameters.
 params:
@@ -120,11 +120,11 @@ params:
   sidebarMenuHeader: Collections
 
   # Sidebar links
-  # bitbucket: "https://bitbucket.org/parsiya/" # I am not really active on bitbucket.
-  twitter: "https://twitter.com/cryptogangsta/"
-  keybase: "https://keybase.io/parsiya/"
-  github: "https://github.com/parsiya/"
-  linkedin: "https://www.linkedin.com/in/parsiya"
+  # bitbucket: "https://bitbucket.org/ttakdict/" # I am not really active on bitbucket.
+  twitter: "https://twitter.com/ttakdict/"
+  keybase: "https://keybase.io/ttakdict/"
+  github: "https://github.com/ttakdict/"
+  linkedin: "https://www.linkedin.com/in/ttakdict"
 
   # 404 page. Header and text.
   notfoundHeader: There's nothing here.
@@ -134,7 +134,7 @@ params:
   truncate: true
 
   # Author's name. Appears in metadata and under posts.
-  author: Parsia
+  author: Pitchaimuthu
 
   # Text that appears in the website header under the website title.
   subtitle: |-
