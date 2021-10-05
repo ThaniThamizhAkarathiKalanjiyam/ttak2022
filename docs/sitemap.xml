@@ -2,127 +2,139 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://localhost:1313/v2/categories/</loc>
+    <loc>/categories/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/post/</loc>
+    <loc>/post/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/tags/</loc>
+    <loc>/tags/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/</loc>
+    <loc>/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/tags/%E0%AE%86%E0%AE%AF%E0%AF%8D%E0%AE%A4%E0%AE%AE%E0%AF%8D/</loc>
+    <loc>/tags/%E0%AE%86%E0%AE%AF%E0%AF%8D%E0%AE%A4%E0%AE%AE%E0%AF%8D/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/tags/%E0%AE%87%E0%AE%9A%E0%AF%88/</loc>
+    <loc>/tags/%E0%AE%87%E0%AE%9A%E0%AF%88/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/blog/2021-08-10-%E0%AE%87%E0%AE%9A%E0%AF%88/</loc>
+    <loc>/blog/2021-08-10-%E0%AE%87%E0%AE%9A%E0%AF%88/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/tags/%E0%AE%87%E0%AE%9F%E0%AF%88%E0%AE%AF%E0%AF%86%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
+    <loc>/tags/%E0%AE%87%E0%AE%9F%E0%AF%88%E0%AE%AF%E0%AF%86%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/blog/2021-08-10-%E0%AE%87%E0%AE%9F%E0%AF%88%E0%AE%AF%E0%AF%86%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
+    <loc>/blog/2021-08-10-%E0%AE%87%E0%AE%9F%E0%AF%88%E0%AE%AF%E0%AF%86%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/tags/%E0%AE%89%E0%AE%AF%E0%AE%BF%E0%AE%B0%E0%AF%8D-%E0%AE%8E%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
+    <loc>/tags/%E0%AE%89%E0%AE%AF%E0%AE%BF%E0%AE%B0%E0%AF%8D-%E0%AE%8E%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/blog/2021-08-10-%E0%AE%89%E0%AE%AF%E0%AE%BF%E0%AE%B0%E0%AF%8D-%E0%AE%8E%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
+    <loc>/blog/2021-08-10-%E0%AE%89%E0%AE%AF%E0%AE%BF%E0%AE%B0%E0%AF%8D-%E0%AE%8E%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/tags/%E0%AE%8E%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
+    <loc>/tags/%E0%AE%8E%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/categories/%E0%AE%8E%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
+    <loc>/categories/%E0%AE%8E%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/tags/%E0%AE%95%E0%AF%81%E0%AE%B1%E0%AF%8D%E0%AE%B1%E0%AE%BF%E0%AE%AF%E0%AE%B2%E0%AE%BF%E0%AE%95%E0%AE%B0%E0%AE%AE%E0%AF%8D/</loc>
+    <loc>/tags/%E0%AE%95%E0%AF%81%E0%AE%B1%E0%AF%8D%E0%AE%B1%E0%AE%BF%E0%AE%AF%E0%AE%B2%E0%AE%BF%E0%AE%95%E0%AE%B0%E0%AE%AE%E0%AF%8D/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/tags/%E0%AE%95%E0%AF%81%E0%AE%B1%E0%AF%8D%E0%AE%B1%E0%AE%BF%E0%AE%AF%E0%AE%B2%E0%AF%81%E0%AE%95%E0%AE%B0%E0%AE%AE%E0%AF%8D/</loc>
+    <loc>/tags/%E0%AE%95%E0%AF%81%E0%AE%B1%E0%AF%8D%E0%AE%B1%E0%AE%BF%E0%AE%AF%E0%AE%B2%E0%AF%81%E0%AE%95%E0%AE%B0%E0%AE%AE%E0%AF%8D/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/tags/%E0%AE%95%E0%AF%81%E0%AE%B1%E0%AF%8D%E0%AE%B1%E0%AF%86%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
+    <loc>/tags/%E0%AE%95%E0%AF%81%E0%AE%B1%E0%AF%8D%E0%AE%B1%E0%AF%86%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/blog/2021-08-10-%E0%AE%95%E0%AF%81%E0%AE%B1%E0%AF%8D%E0%AE%B1%E0%AF%86%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
+    <loc>/blog/2021-08-10-%E0%AE%95%E0%AF%81%E0%AE%B1%E0%AF%8D%E0%AE%B1%E0%AF%86%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/tags/%E0%AE%9A%E0%AE%BE%E0%AE%B0%E0%AF%8D/</loc>
+    <loc>/tags/%E0%AE%9A%E0%AE%BE%E0%AE%B0%E0%AF%8D/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/blog/2021-08-10-%E0%AE%9A%E0%AE%BE%E0%AE%B0%E0%AF%8D-%E0%AE%8E%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
+    <loc>/blog/2021-08-10-%E0%AE%9A%E0%AE%BE%E0%AE%B0%E0%AF%8D-%E0%AE%8E%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/tags/%E0%AE%9A%E0%AF%81%E0%AE%9F%E0%AF%8D%E0%AE%9F%E0%AF%81/</loc>
+    <loc>/tags/%E0%AE%9A%E0%AF%81%E0%AE%9F%E0%AF%8D%E0%AE%9F%E0%AF%81/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/blog/2021-08-10-%E0%AE%9A%E0%AF%81%E0%AE%9F%E0%AF%8D%E0%AE%9F%E0%AF%81/</loc>
+    <loc>/blog/2021-08-10-%E0%AE%9A%E0%AF%81%E0%AE%9F%E0%AF%8D%E0%AE%9F%E0%AF%81/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/tags/%E0%AE%A8%E0%AF%86%E0%AE%9F%E0%AF%8D%E0%AE%9F%E0%AF%86%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
+    <loc>/tags/%E0%AE%A8%E0%AF%86%E0%AE%9F%E0%AF%8D%E0%AE%9F%E0%AF%86%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/blog/2021-08-10-%E0%AE%A8%E0%AF%86%E0%AE%9F%E0%AF%8D%E0%AE%9F%E0%AF%86%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
+    <loc>/blog/2021-08-10-%E0%AE%A8%E0%AF%86%E0%AE%9F%E0%AF%8D%E0%AE%9F%E0%AF%86%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/tags/%E0%AE%AE%E0%AE%BE%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AE%BF%E0%AE%B0%E0%AF%88/</loc>
+    <loc>/tags/%E0%AE%AE%E0%AE%BE%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AE%BF%E0%AE%B0%E0%AF%88/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/blog/2021-08-10-%E0%AE%AE%E0%AE%BE%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AE%BF%E0%AE%B0%E0%AF%88/</loc>
+    <loc>/blog/2021-08-10-%E0%AE%AE%E0%AE%BE%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AE%BF%E0%AE%B0%E0%AF%88/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/tags/%E0%AE%AE%E0%AF%86%E0%AE%AF%E0%AF%8D-%E0%AE%8E%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
+    <loc>/tags/%E0%AE%AE%E0%AF%86%E0%AE%AF%E0%AF%8D-%E0%AE%8E%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/blog/2021-08-10-%E0%AE%AE%E0%AF%86%E0%AE%AF%E0%AF%8D-%E0%AE%8E%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
+    <loc>/blog/2021-08-10-%E0%AE%AE%E0%AF%86%E0%AE%AF%E0%AF%8D-%E0%AE%8E%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/tags/%E0%AE%AE%E0%AF%86%E0%AE%AF%E0%AF%8D%E0%AE%AE%E0%AF%8D%E0%AE%AE%E0%AE%AF%E0%AE%95%E0%AF%8D%E0%AE%95%E0%AF%81/</loc>
+    <loc>/tags/%E0%AE%AE%E0%AF%86%E0%AE%AF%E0%AF%8D%E0%AE%AE%E0%AF%8D%E0%AE%AE%E0%AE%AF%E0%AE%95%E0%AF%8D%E0%AE%95%E0%AF%81/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/blog/2021-08-10-%E0%AE%AE%E0%AF%86%E0%AE%AF%E0%AF%8D%E0%AE%AE%E0%AF%8D%E0%AE%AE%E0%AE%AF%E0%AE%95%E0%AF%8D%E0%AE%95%E0%AF%81/</loc>
+    <loc>/blog/2021-08-10-%E0%AE%AE%E0%AF%86%E0%AE%AF%E0%AF%8D%E0%AE%AE%E0%AF%8D%E0%AE%AE%E0%AE%AF%E0%AE%95%E0%AF%8D%E0%AE%95%E0%AF%81/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/tags/%E0%AE%AE%E0%AF%86%E0%AE%B2%E0%AF%8D%E0%AE%B2%E0%AF%86%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
+    <loc>/tags/%E0%AE%AE%E0%AF%86%E0%AE%B2%E0%AF%8D%E0%AE%B2%E0%AF%86%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/blog/2021-08-10-%E0%AE%AE%E0%AF%86%E0%AE%B2%E0%AF%8D%E0%AE%B2%E0%AF%86%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
+    <loc>/blog/2021-08-10-%E0%AE%AE%E0%AF%86%E0%AE%B2%E0%AF%8D%E0%AE%B2%E0%AF%86%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/tags/%E0%AE%B5%E0%AE%B2%E0%AF%8D%E0%AE%B2%E0%AF%86%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
+    <loc>/tags/%E0%AE%B5%E0%AE%B2%E0%AF%8D%E0%AE%B2%E0%AF%86%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/blog/2021-08-10-%E0%AE%B5%E0%AE%B2%E0%AF%8D%E0%AE%B2%E0%AF%86%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
+    <loc>/blog/2021-08-10-%E0%AE%B5%E0%AE%B2%E0%AF%8D%E0%AE%B2%E0%AF%86%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/tags/%E0%AE%B5%E0%AE%BF%E0%AE%A9%E0%AE%BE/</loc>
+    <loc>/tags/%E0%AE%B5%E0%AE%BF%E0%AE%A9%E0%AE%BE/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/blog/2021-08-10-%E0%AE%B5%E0%AE%BF%E0%AE%A9%E0%AE%BE/</loc>
+    <loc>/blog/2021-08-10-%E0%AE%B5%E0%AE%BF%E0%AE%A9%E0%AE%BE/</loc>
     <lastmod>2021-08-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/blog/2021-08-09-%E0%AE%8E%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
+    <loc>/blog/2021-08-09-%E0%AE%8E%E0%AE%B4%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AF%81/</loc>
     <lastmod>2021-08-09T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/page/</loc>
+    <loc>/page/</loc>
     <lastmod>2021-02-21T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/letters/</loc>
+    <loc>/letters/</loc>
     <lastmod>2021-02-21T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/about/</loc>
+    <loc>/about/</loc>
     <lastmod>2021-02-14T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/archive/</loc>
+    <loc>/categories/crypto/</loc>
+    <lastmod>2018-04-14T15:16:17-04:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/license/</loc>
+    <loc>/drafts/</loc>
+    <lastmod>2018-04-14T15:16:17-04:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/v2/tags/license/</loc>
+    <loc>/categories/go/</loc>
+    <lastmod>2018-04-14T15:16:17-04:00</lastmod>
+  </url><url>
+    <loc>/drafts/2018-04-15-certificate-go/</loc>
+    <lastmod>2018-04-14T15:16:17-04:00</lastmod>
+  </url><url>
+    <loc>/archive/</loc>
+  </url><url>
+    <loc>/license/</loc>
+  </url><url>
+    <loc>/tags/license/</loc>
   </url>
 </urlset>

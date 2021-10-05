@@ -1,6 +1,6 @@
 # https://gohugo.io/overview/configuration/
 
-baseurl: "https://thanithamizhakarathikalanjiyam.github.io/v2/"
+baseurl: "/"
 disablePathToLower: false
 languageCode: en-us
 title: அஃக 
