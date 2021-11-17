@@ -16,7 +16,7 @@ relativeURLs: true
 metadataformat: yaml
 
 # Disqus configuration.
-disqusShortname: https-thanithamizhakarathikalanjiyam-github-io-v2
+#disqusShortname: https-thanithamizhakarathikalanjiyam-github-io-v2
 
 # Only generate HTML output for these places. No need for RSS/XML/whatever.
 outputs:
@@ -40,7 +40,7 @@ menu:
   # Template: {{theme-dir}}/layouts/partials/navigation.html.
   main:
     - Name: Home
-      URL: 
+      URL: /
       weight: 1
     - Name: About Me!
       URL: /about/
@@ -166,7 +166,7 @@ params:
   # tableOfContents: false
 
   # Generate taxonomy list under /categories/ and /tags/
-  generateTaxonomyList: true
+  generateTaxonomyList: false
 
   # Twitter card config.
   # Enable twitter card.
