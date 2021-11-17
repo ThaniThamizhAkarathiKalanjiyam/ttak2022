@@ -3,7 +3,7 @@
 baseurl: "https://thanithamizhakarathikalanjiyam.github.io/v2/"
 disablePathToLower: false
 languageCode: en-us
-title: அஃக 
+title: தொல்காப்பியம் 
 theme: Hugo-Octopress
 uglyURLs: true
 relativeURLs: true
@@ -39,6 +39,8 @@ menu:
   # All links except home ("/") will open in a new window.
   # Template: {{theme-dir}}/layouts/partials/navigation.html.
   main:
+    - Name: Home
+      URL: /v2/
     - Name: About Me!
       URL: /about/
       weight: 2
@@ -110,7 +112,7 @@ params:
   sidebarHeader: Who am I?
   # Appears directly under the sidebar header.
   sidebarText: |-
-    I am Pitchaimuthu Muthaiya, a senior security engineer.
+    I am Pitchaimuthu Muthaiya, a senior software engineer.
     
     I write about application tamil words and roots of words.
 
