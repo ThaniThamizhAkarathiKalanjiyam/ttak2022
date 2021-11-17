@@ -40,7 +40,8 @@ menu:
   # Template: {{theme-dir}}/layouts/partials/navigation.html.
   main:
     - Name: Home
-      URL: /v2/
+      URL: 
+      weight: 1
     - Name: About Me!
       URL: /about/
       weight: 2
