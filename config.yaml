@@ -16,7 +16,7 @@ relativeURLs: true
 metadataformat: yaml
 
 # Disqus configuration.
-disqusShortname: parsiya
+disqusShortname: disqus_ddAGhJI8xr
 
 # Only generate HTML output for these places. No need for RSS/XML/whatever.
 outputs:
