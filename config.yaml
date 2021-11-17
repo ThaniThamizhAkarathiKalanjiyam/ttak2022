@@ -16,7 +16,7 @@ relativeURLs: true
 metadataformat: yaml
 
 # Disqus configuration.
-disqusShortname: https-thanithamizhakarathikalanjiyam-github-io-v2
+disqusShortname: TTAK
 
 # Only generate HTML output for these places. No need for RSS/XML/whatever.
 outputs:
