@@ -6,6 +6,7 @@ languageCode: en-us
 title: அஃக 
 theme: Hugo-Octopress
 uglyURLs: true
+relativeURLs: true
 
 # Number of blog posts displayed on each pagination page.
 # No need for pagination in the current setup.
